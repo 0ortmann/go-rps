@@ -127,14 +127,13 @@ func getComputerPlayer() player {
 }
 
 func determineWinner(player1, player2 *player) *player {
-
-	if player1.figure.name == player2.figure.successorName {
+	switch {
+	case player1.figure.name == player2.figure.successorName:
 		return player1
-	} else if player2.figure.name == player1.figure.successorName {
+	case player2.figure.name == player1.figure.successorName:
 		return player2
-	} else {
-		return nil
 	}
+	return nil
 }
 
 
