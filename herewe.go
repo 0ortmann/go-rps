@@ -20,8 +20,22 @@ func main() {
 
 	
 	computer := getComputerPlayer()
+	human := getPlayerFromConsole()
 
+	fmt.Println(human.name, "picked", human.figure)
+	fmt.Println(computer.name, "picked", computer.figure)
+
+	var winner = determineWinner(&human, &computer)
+	if winner != nil {
+		fmt.Println("Winner is", winner.name)
+	} else {
+		fmt.Println("It's a tie!")
+	}
+}
+
+func getPlayerFromConsole() player {
 	reader := bufio.NewReader(os.Stdin)
+
 	fmt.Println("Please choose a name")
 	userName, err := reader.ReadString('\n')
 	if err != nil {
@@ -36,20 +50,7 @@ func main() {
 	}
 	userFigure = strings.TrimSpace(userFigure)
 
-
-	human := player{userName, userFigure}
-
-
-
-	fmt.Println(human.name, "picked", human.figure)
-	fmt.Println(computer.name, "picked", computer.figure)
-
-	var winner = determineWinner(&human, &computer)
-	if winner != nil {
-		fmt.Println("Winner is", winner.name)
-	} else {
-		fmt.Println("It's a tie!")
-	}
+	return player{userName, userFigure}
 }
 
 func getComputerPlayer() player {
