@@ -43,17 +43,22 @@ func main() {
 	}
 }
 
-func getFigure() figure {
-	var userFigureName string
-	var userFigure figure
+func getFigureFromConsole() figure {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("Please draw (rock, scissor, paper)")
-	userFigureName, err := reader.ReadString('\n')
-	if err != nil {
-		log.Fatal(err)
+
+	var userFigure figure
+	for userFigure == Figures["no"] {
+		fmt.Println("Please draw (rock, scissor, paper)")
+		userFigureName, err := reader.ReadString('\n')
+		if err != nil {
+			log.Fatal(err)
+		}
+		userFigureName = strings.TrimSpace(userFigureName)
+		userFigure = Figures[userFigureName]
+		if userFigure == Figures["no"] {
+			fmt.Println("Choose again! Your choice has not been recognized")
+		}
 	}
-	userFigureName = strings.TrimSpace(userFigureName)
-	userFigure = Figures[userFigureName] // this may break
 	return userFigure
 }
 
@@ -66,13 +71,8 @@ func getPlayerFromConsole() player {
 		log.Fatal(err)
 	}
 	userName = strings.TrimSpace(userName)
-	var userFigure figure
-	for userFigure == Figures["no"] {
-		userFigure = getFigure()
-		if userFigure == Figures["no"] {
-			fmt.Println("Choose again! Your choice has not been recognized")
-		}
-	}
+	userFigure := getFigureFromConsole()
+
 	return player{userName, userFigure}
 }
 
