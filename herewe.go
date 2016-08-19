@@ -52,7 +52,6 @@ func startServer() {
 }
 
 func handler(writer http.ResponseWriter, request *http.Request) {
-    
 
     fmt.Println("Hey, someone registered, now you have to play!")
 
@@ -66,8 +65,11 @@ func handler(writer http.ResponseWriter, request *http.Request) {
 	fmt.Println(owner.name, "picked", owner.figure.name)
 	fmt.Println(opponent.name, "picked", opponent.figure.name)
 	printWinnerText(winner)
-
-	fmt.Fprintf(writer, "Winner is", winner.name)
+	if winner != nil {
+		fmt.Fprintf(writer, "Winner is %s", winner.name)
+	} else {
+		fmt.Fprintf(writer, "It's a tie!")
+	}
 }
 
 func openWebserver() {
