@@ -79,6 +79,13 @@ func openWebserver() {
 
 func startClient() {
 	// todo
+	player := getPlayerFromConsole()
+	resp, err := http.Get("http://localhost:5000/" + player.name + "/" + player.figure.name)
+	if err == nil {
+		fmt.Println(resp.Body)
+	} else {
+		log.Fatal(err)
+	}
 }
 
 func startSinglePlayer() {
