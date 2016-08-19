@@ -7,6 +7,7 @@ import (
 	"os"
 	"bufio"
 	"strings"
+	"log"
 )
 var Figures = [3]string { "rock", "paper", "scissor" }
 
@@ -22,13 +23,19 @@ func main() {
 
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Please choose a name")
-	userName, _ := reader.ReadString('\n')
+	userName, err := reader.ReadString('\n')
+	if err != nil {
+		log.Fatal(err)
+	}
 	userName = strings.TrimSpace(userName)
 
 	fmt.Println("Please draw (rock, scissor, paper)")
-	userFigure, _ := reader.ReadString('\n')
+	userFigure, err := reader.ReadString('\n')
+	if err != nil {
+		log.Fatal(err)
+	}
 	userFigure = strings.TrimSpace(userFigure)
-	
+
 
 	human := player{userName, userFigure}
 
