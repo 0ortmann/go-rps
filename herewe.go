@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"net/http"
 	"os"
 	"strings"
 	"time"
-	"net/http"
 )
 
 var Figures = map[string]figure{
@@ -30,7 +30,7 @@ type player struct {
 
 func main() {
 	fmt.Println("Choose your playmode (single, server, client):")
-	
+
 	playmode := parseConsoleInput()
 
 	switch playmode {
@@ -53,14 +53,14 @@ func startServer() {
 
 func handler(writer http.ResponseWriter, request *http.Request) {
 
-    fmt.Println("Hey, someone registered, now you have to play!")
+	fmt.Println("Hey, someone registered, now you have to play!")
 
-    owner := getPlayerFromConsole()
-    url := string(request.URL.Path[1:])
-    opponentName := strings.Split(url, "/")[0]
-    opponentFigure := strings.Split(url, "/")[1]
-    opponent := player{opponentName, Figures[opponentFigure]}
-    winner := determineWinner(&owner, &opponent)
+	owner := getPlayerFromConsole()
+	url := string(request.URL.Path[1:])
+	opponentName := strings.Split(url, "/")[0]
+	opponentFigure := strings.Split(url, "/")[1]
+	opponent := player{opponentName, Figures[opponentFigure]}
+	winner := determineWinner(&owner, &opponent)
 
 	fmt.Println(owner.name, "picked", owner.figure.name)
 	fmt.Println(opponent.name, "picked", opponent.figure.name)
@@ -74,7 +74,7 @@ func handler(writer http.ResponseWriter, request *http.Request) {
 
 func openWebserver() {
 	http.HandleFunc("/", handler)
-    http.ListenAndServe(":5000", nil)
+	http.ListenAndServe(":5000", nil)
 }
 
 func startClient() {
@@ -135,7 +135,6 @@ func determineWinner(player1, player2 *player) *player {
 	}
 	return nil
 }
-
 
 func parseConsoleInput() string {
 	reader := bufio.NewReader(os.Stdin)
