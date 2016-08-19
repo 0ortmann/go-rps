@@ -1,33 +1,44 @@
 package main
 
 import (
-	"fmt"
-	"math/rand"
-	"time"
-	"os"
 	"bufio"
-	"strings"
+	"fmt"
 	"log"
+	"math/rand"
+	"os"
+	"strings"
+	"time"
 )
-var Figures = [3]string { "rock", "paper", "scissor" }
+
+var Figures = map[string]figure{
+	"rock": figure{"rock", "asciigen(rock)", "paper"},
+	"paper": figure{"paper", "asciigen(paper)", "scissor"},
+	"scissor": figure{"scissor", "asciigen(scissor)", "rock"},
+}
+
+type figure struct {
+	name          string
+	ascii         string
+	successorName string
+}
 
 type player struct {
-	name string
-	figure string
+	name   string
+	figure figure
 }
 
 func main() {
 
-	
+
 	computer := getComputerPlayer()
 	human := getPlayerFromConsole()
 
-	fmt.Println(human.name, "picked", human.figure)
-	fmt.Println(computer.name, "picked", computer.figure)
+	fmt.Println(human.name, "picked", human.figure.name)
+	fmt.Println(computer.name, "picked", computer.figure.name)
 
 	var winner = determineWinner(&human, &computer)
 	if winner != nil {
-		fmt.Println("Winner is", winner.name)
+		fmt.Println("Winner is", winner.name, winner.figure.ascii)
 	} else {
 		fmt.Println("It's a tie!")
 	}
@@ -44,32 +55,32 @@ func getPlayerFromConsole() player {
 	userName = strings.TrimSpace(userName)
 
 	fmt.Println("Please draw (rock, scissor, paper)")
-	userFigure, err := reader.ReadString('\n')
+	userFigureName, err := reader.ReadString('\n')
 	if err != nil {
 		log.Fatal(err)
 	}
-	userFigure = strings.TrimSpace(userFigure)
-
+	userFigureName = strings.TrimSpace(userFigureName)
+	userFigure := Figures[userFigureName] // this may break
 	return player{userName, userFigure}
 }
 
 func getComputerPlayer() player {
 	rand.Seed(time.Now().UTC().UnixNano())
-	return player{"Computer", Figures[rand.Intn(len(Figures))]}
+	keys := []string{}
+	for k := range Figures {
+	    keys = append(keys, k)
+	}
+	fmt.Println(keys)
+	randomKey := keys[rand.Intn(len(Figures))]
+	return player{"Computer", Figures[randomKey]}
 }
 
 func determineWinner(player1, player2 *player) *player {
 
-	successors := map[string]string {
-		"paper": "scissor",
-		"scissor": "rock",
-		"rock": "paper",
-	}
-
-	if successors[player1.figure] == player2.figure {
-		return player2
-	} else if successors[player2.figure] == player1.figure {
+	if player1.figure.name == player2.figure.successorName {
 		return player1
+	} else if player2.figure.name == player1.figure.successorName {
+		return player2
 	} else {
 		return nil
 	}
