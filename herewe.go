@@ -6,16 +6,16 @@ import (
 	"time"
 	"os"
 )
+var Figures = [3]string { "rock", "paper", "scissor" }
 
 func main() {
-	
-	playerFigure := os.Args[1] // bam if not provided
-
-	figures := []string { "rock", "paper", "scissor" }
 
 	rand.Seed(time.Now().UTC().UnixNano())
+	playerFigure := os.Args[1] // bam if not provided
 
-	randFigure := figures[rand.Intn(len(figures))]
+	randFigure := Figures[rand.Intn(len(Figures))]
+
+
 	fmt.Println("You (player 1)", playerFigure)
 	fmt.Println("Computer (player 2)", randFigure)
 
@@ -23,7 +23,7 @@ func main() {
 	fmt.Println("winner is player", determineWinner(playerFigure, randFigure))
 }
 
-func determineWinner(figure1, figure2 string) string {
+func determineWinner(figures ...string) string {
 
 	successors := map[string]string {
 		"paper": "scissor",
@@ -31,12 +31,11 @@ func determineWinner(figure1, figure2 string) string {
 		"rock": "paper",
 	}
 
-	if successors[figure1] == figure2 {
+	if successors[figures[0]] == figures[1] {
 		return "2"
-	} else if successors[figure2] == figure1 {
+	} else if successors[figures[1]] == figures[0] {
 		return "1"
 	} else {
 		return "draw"
 	}
 }
-
