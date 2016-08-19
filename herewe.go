@@ -11,8 +11,8 @@ import (
 )
 
 var Figures = map[string]figure{
-	"rock": figure{"rock", "asciigen(rock)", "paper"},
-	"paper": figure{"paper", "asciigen(paper)", "scissor"},
+	"rock":    figure{"rock", "asciigen(rock)", "paper"},
+	"paper":   figure{"paper", "asciigen(paper)", "scissor"},
 	"scissor": figure{"scissor", "asciigen(scissor)", "rock"},
 }
 
@@ -29,7 +29,6 @@ type player struct {
 
 func main() {
 
-
 	computer := getComputerPlayer()
 	human := getPlayerFromConsole()
 
@@ -44,6 +43,20 @@ func main() {
 	}
 }
 
+func getFigure() figure {
+	var userFigureName string
+	var userFigure figure
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("Please draw (rock, scissor, paper)")
+	userFigureName, err := reader.ReadString('\n')
+	if err != nil {
+		log.Fatal(err)
+	}
+	userFigureName = strings.TrimSpace(userFigureName)
+	userFigure = Figures[userFigureName] // this may break
+	return userFigure
+}
+
 func getPlayerFromConsole() player {
 	reader := bufio.NewReader(os.Stdin)
 
@@ -53,14 +66,13 @@ func getPlayerFromConsole() player {
 		log.Fatal(err)
 	}
 	userName = strings.TrimSpace(userName)
-
-	fmt.Println("Please draw (rock, scissor, paper)")
-	userFigureName, err := reader.ReadString('\n')
-	if err != nil {
-		log.Fatal(err)
+	var userFigure figure
+	for userFigure == Figures["no"] {
+		userFigure = getFigure()
+		if userFigure == Figures["no"] {
+			fmt.Println("Choose again! Your choice has not been recognized")
+		}
 	}
-	userFigureName = strings.TrimSpace(userFigureName)
-	userFigure := Figures[userFigureName] // this may break
 	return player{userName, userFigure}
 }
 
@@ -68,7 +80,7 @@ func getComputerPlayer() player {
 	rand.Seed(time.Now().UTC().UnixNano())
 	keys := []string{}
 	for k := range Figures {
-	    keys = append(keys, k)
+		keys = append(keys, k)
 	}
 	fmt.Println(keys)
 	randomKey := keys[rand.Intn(len(Figures))]
