@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"io/ioutil"
 )
 
 var Figures = map[string]figure{
@@ -80,9 +81,14 @@ func openWebserver() {
 func startClient() {
 	// todo
 	player := getPlayerFromConsole()
-	resp, err := http.Get("http://localhost:5000/" + player.name + "/" + player.figure.name)
+	fmt.Println("Please enter the server IP you want to connect to")
+	ip := parseConsoleInput()
+
+	resp, err := http.Get("http://" + ip + ":5000/" + player.name + "/" + player.figure.name)
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
 	if err == nil {
-		fmt.Println(resp.Body)
+		fmt.Println(string(body))
 	} else {
 		log.Fatal(err)
 	}
