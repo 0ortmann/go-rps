@@ -71,6 +71,7 @@ func handler(writer http.ResponseWriter, request *http.Request) {
 	} else {
 		fmt.Fprintf(writer, "It's a tie!")
 	}
+	fmt.Println("Play again! (waiting for other player...)")
 }
 
 func openWebserver() {
@@ -80,29 +81,35 @@ func openWebserver() {
 
 func startClient() {
 	// todo
-	player := getPlayerFromConsole()
 	fmt.Println("Please enter the server IP you want to connect to")
 	ip := parseConsoleInput()
+	for {
+		player := getPlayerFromConsole()
 
-	resp, err := http.Get("http://" + ip + ":5000/" + player.name + "/" + player.figure.name)
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err == nil {
-		fmt.Println(string(body))
-	} else {
-		log.Fatal(err)
+		resp, err := http.Get("http://" + ip + ":5000/" + player.name + "/" + player.figure.name)
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err == nil {
+			fmt.Println(string(body))
+		} else {
+			log.Fatal(err)
+		}
+		fmt.Println("\nPlay again on this server!")
 	}
 }
 
 func startSinglePlayer() {
-	computer := getComputerPlayer()
-	human := getPlayerFromConsole()
+	for {
+		computer := getComputerPlayer()
+		human := getPlayerFromConsole()
 
-	fmt.Println(human.name, "picked", human.figure.name)
-	fmt.Println(computer.name, "picked", computer.figure.name)
+		fmt.Println(human.name, "picked", human.figure.name)
+		fmt.Println(computer.name, "picked", computer.figure.name)
 
-	winner := determineWinner(&human, &computer)
-	printWinnerText(winner)
+		winner := determineWinner(&human, &computer)
+		printWinnerText(winner)
+		fmt.Println("\nPlay again!")
+	}
 }
 
 func getFigureFromConsole() figure {
