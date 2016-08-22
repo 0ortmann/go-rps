@@ -1,5 +1,8 @@
 # Dummy repo for learning go
 
+##Very Good Go-Examples:
+https://gobyexample.com/
+
 ### rock paper scissor
 
 	[x] command line tool for rps against computer
