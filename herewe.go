@@ -3,13 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"strings"
 	"time"
-	"io/ioutil"
 )
 
 var Figures = map[string]figure{
