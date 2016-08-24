@@ -13,11 +13,12 @@ type GameStore struct {
 }
 
 type Game struct {
-	Name    string
-	Open    bool
-	Players map[string]string
-	Winners []string
-	mu      sync.RWMutex
+	Name      string
+	Open      bool
+	Players   map[string]string
+	Winners   []string
+	WinAction string
+	mu        sync.RWMutex
 }
 
 type PlayerAction struct {
@@ -78,10 +79,13 @@ func (g *Game) Eval() {
 	switch {
 	case r["paper"] != nil && r["scissor"] != nil:
 		g.Winners = r["scissor"]
+		g.WinAction = "scissor"
 	case r["scissor"] != nil && r["rock"] != nil:
 		g.Winners = r["rock"]
+		g.WinAction = "rock"
 	case r["rock"] != nil && r["paper"] != nil:
 		g.Winners = r["paper"]
+		g.WinAction = "paper"
 	}
 
 	return
@@ -182,5 +186,6 @@ func evalHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	game.Eval()
-	fmt.Fprintf(w, "Game winner(s) of %s: %s\nParticipants: %s", game.Name, game.Winners, game.Players)
+	jsonStr, _ := json.Marshal(&game)
+	fmt.Fprintf(w, string(jsonStr))
 }

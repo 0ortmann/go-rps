@@ -4,23 +4,27 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
 )
 
 type Gopher struct {
 	Name string
 	Game string
-	Wins int
 }
 
-type GameStore struct {
-	games []string
-	mu    sync.RWMutex
+type GameResult struct {
+	Players   map[string]string
+	Winners   []string
+	WinAction string
+}
+
+type Stats struct {
+	Figure string
+	Weight int
+	Amount int
 }
 
 func NewGopher(name string) *Gopher {
@@ -32,20 +36,27 @@ func NewGopher(name string) *Gopher {
 const playURL = "http://localhost:5000/play"
 const createURL = "http://localhost:5000/create"
 const evalURL = "http://localhost:5000/eval"
-const totalGames = 1000
+const totalGames = 100
 
 func main() {
-	fin := make(chan int)
+	stats := make(chan *Stats)
 	for i := 0; i < totalGames; i++ {
-		go initGophers("game-" + strconv.Itoa(i), fin)
+		go startGame("game-"+strconv.Itoa(i), stats)
 	}
+	res := make(map[string]int)
 	for i := 0; i < totalGames; i++ {
-		<-fin
+		stat := <-stats
+		res[stat.Figure] += stat.Weight
 	}
+	fmt.Printf("Total win-weights for %d games\n", totalGames)
+	for f, w := range res {
+		fmt.Println(f, w)
+	}
+	fmt.Println("High win-weight means potentially high number of opponents beaten with that figure")
 }
 
 // Creates a random number of gopher between 1 and 10 and lets them play a game, then close that game
-func initGophers(game string, fin chan int) {
+func startGame(game string, stats chan *Stats) {
 	rand.Seed(time.Now().UTC().UnixNano())
 	sendCreate(game)
 	gCount := rand.Intn(10) + 1
@@ -54,11 +65,11 @@ func initGophers(game string, fin chan int) {
 		g := NewGopher("gopher-" + strconv.Itoa(i))
 		go g.Play(game, done)
 	}
-	for i := 0; i < gCount; i++{
+	for i := 0; i < gCount; i++ {
 		<-done
 	}
-	sendEval(game)
-	fin <- 1
+	r := sendEval(game)
+	aggregateStats(r, stats)
 }
 
 func (g *Gopher) Play(game string, done chan int) {
@@ -88,20 +99,26 @@ func (b *Gopher) ChooseAction() string {
 	return a[rand.Intn(3)]
 }
 
-func sendEval(game string) {
+func sendEval(game string) *GameResult {
 	type Payload struct {
 		Game string
 	}
-	payload := &Payload{game}
-	jsonStr, _ := json.Marshal(payload)
+	p := &Payload{game}
+	jsonStr, _ := json.Marshal(p)
 	resp, err := http.Post(evalURL, "application/jsonStr", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		fmt.Println("I failed to eval for game", game)
-		return
+		return nil
 	}
-	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println(string(body))
-	resp.Body.Close()
+	var r GameResult
+	d := json.NewDecoder(resp.Body)
+	err = d.Decode(&r)
+	if err != nil {
+		fmt.Println("Cannot parse eval response for game", game)
+		return nil
+	}
+	return &r
+
 }
 
 func sendCreate(game string) {
@@ -118,4 +135,12 @@ func sendCreate(game string) {
 	//body, _ := ioutil.ReadAll(resp.Body)
 	//fmt.Println(string(body))
 	resp.Body.Close()
+}
+
+func aggregateStats(r *GameResult, stats chan *Stats) {
+	if len(r.Winners) == 0 {
+		stats <- &Stats{Figure: "Tie", Weight: 0}
+	} else {
+		stats <- &Stats{Figure: r.WinAction, Weight: len(r.Winners) * len(r.Players)}
+	}
 }
