@@ -73,7 +73,6 @@ func (g *Game) Eval() {
 
 	if len(r) == 1 || len(r) == 3 {
 		// its a draw
-		fmt.Println("Its a draw")
 		return
 	}
 	switch {
@@ -163,7 +162,7 @@ func actionHandler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Player name already exists or empty", 409)
 		return
 	}
-	fmt.Fprintf(w, "Game %s, player name/action %s/%s", game.Name, pa.Player, pa.Action)
+	fmt.Fprintf(w, "Game %s, %s/%s", game.Name, pa.Player, pa.Action)
 }
 
 func evalHandler(w http.ResponseWriter, req *http.Request) {
@@ -183,6 +182,5 @@ func evalHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	game.Eval()
-	fmt.Fprintf(w, "Game winner(s): %s", game.Winners)
-
+	fmt.Fprintf(w, "Game winner(s) of %s: %s\nParticipants: %s", game.Name, game.Winners, game.Players)
 }
