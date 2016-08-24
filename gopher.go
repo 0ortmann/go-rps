@@ -34,64 +34,52 @@ const createURL = "http://localhost:5000/create"
 const evalURL = "http://localhost:5000/eval"
 
 func main() {
-	total := 10000
+	total := 1000
 	fin := make(chan int)
 	for i := 0; i < total; i++ {
-		initGophers("game-" + strconv.Itoa(i), fin)
+		go initGophers("game-" + strconv.Itoa(i), fin)
 	}
-	var count int
-	for {
-		count += <-fin
-		if count == total {
-			return 
-		}
+	for i := 0; i < total; i++ {
+		<-fin
 	}
 }
 
-// Creates a random number of bots between 1 and 10 and lets them play a game, then close that game
+// Creates a random number of gopher between 1 and 10 and lets them play a game, then close that game
 func initGophers(game string, fin chan int) {
-	go func() {
-		rand.Seed(time.Now().UTC().UnixNano())
-		sendCreate(game)
-		bCount := rand.Intn(10) + 1
-		done := make(chan int)
-		for i := 0; i < bCount; i++ {
-			b := NewGopher("bot-" + strconv.Itoa(i))
-			b.Play(game, done)
-		}
-		var doneCount int
-		for {
-			doneCount += <-done
-			if doneCount == bCount {
-				sendEval(game)
-				fin <- 1
-				return
-			}
-		}
-	}()
+	rand.Seed(time.Now().UTC().UnixNano())
+	sendCreate(game)
+	gCount := rand.Intn(10) + 1
+	done := make(chan int)
+	for i := 0; i < gCount; i++ {
+		g := NewGopher("gopher-" + strconv.Itoa(i))
+		go g.Play(game, done)
+	}
+	for i := 0; i < gCount; i++{
+		<-done
+	}
+	sendEval(game)
+	fin <- 1
 }
 
 func (b *Gopher) Play(game string, done chan int) {
-	go func() {
-		type Payload struct {
-			Game   string
-			Player string
-			Action string
-		}
-		payload := &Payload{game, b.Name, b.ChooseAction()}
-		jsonStr, _ := json.Marshal(payload)
+	type Payload struct {
+		Game   string
+		Player string
+		Action string
+	}
+	payload := &Payload{game, b.Name, b.ChooseAction()}
+	jsonStr, _ := json.Marshal(payload)
 
-		resp, err := http.Post(playURL, "application/json", bytes.NewBuffer(jsonStr))
-		if err != nil {
-			fmt.Println("I failed to play :( )", err)
-			done <- 1
-			return
-		}
-		//body, _ := ioutil.ReadAll(resp.Body)
-		//fmt.Println(string(body))
-		resp.Body.Close()
+	resp, err := http.Post(playURL, "application/json", bytes.NewBuffer(jsonStr))
+	if err != nil {
+		fmt.Println("I failed to play :( )", err)
 		done <- 1
-	}()
+		return
+	}
+	//body, _ := ioutil.ReadAll(resp.Body)
+	//fmt.Println(string(body))
+	resp.Body.Close()
+	done <- 1
 }
 
 func (b *Gopher) ChooseAction() string {
