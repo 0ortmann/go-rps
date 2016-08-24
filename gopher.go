@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -16,6 +18,8 @@ type Gopher struct {
 }
 
 type GameResult struct {
+	Name      string
+	Open      bool
 	Players   map[string]string
 	Winners   []string
 	WinAction string
@@ -23,7 +27,6 @@ type GameResult struct {
 
 type Stats struct {
 	Figure string
-	Weight int
 	Amount int
 }
 
@@ -36,23 +39,26 @@ func NewGopher(name string) *Gopher {
 const playURL = "http://localhost:5000/play"
 const createURL = "http://localhost:5000/create"
 const evalURL = "http://localhost:5000/eval"
-const totalGames = 100
+const totalGames = 5000
 
 func main() {
 	stats := make(chan *Stats)
 	for i := 0; i < totalGames; i++ {
 		go startGame("game-"+strconv.Itoa(i), stats)
+		if i%100 == 0 {
+			// dont fuck with the ulimits, dont burn the fan...
+			time.Sleep(time.Millisecond * 50)
+		}
 	}
 	res := make(map[string]int)
 	for i := 0; i < totalGames; i++ {
 		stat := <-stats
-		res[stat.Figure] += stat.Weight
+		res[stat.Figure] += stat.Amount
 	}
-	fmt.Printf("Total win-weights for %d games\n", totalGames)
+	fmt.Printf("Total win stats for %d games\n", totalGames)
 	for f, w := range res {
 		fmt.Println(f, w)
 	}
-	fmt.Println("High win-weight means potentially high number of opponents beaten with that figure")
 }
 
 // Creates a random number of gopher between 1 and 10 and lets them play a game, then close that game
@@ -87,8 +93,7 @@ func (g *Gopher) Play(game string, done chan int) {
 		done <- 1
 		return
 	}
-	//body, _ := ioutil.ReadAll(resp.Body)
-	//fmt.Println(string(body))
+	io.Copy(ioutil.Discard, resp.Body)
 	resp.Body.Close()
 	done <- 1
 }
@@ -112,6 +117,7 @@ func sendEval(game string) *GameResult {
 	}
 	var r GameResult
 	d := json.NewDecoder(resp.Body)
+	defer resp.Body.Close()
 	err = d.Decode(&r)
 	if err != nil {
 		fmt.Println("Cannot parse eval response for game", game)
@@ -132,15 +138,18 @@ func sendCreate(game string) {
 		fmt.Println("I faild to create game", game)
 		return
 	}
-	//body, _ := ioutil.ReadAll(resp.Body)
-	//fmt.Println(string(body))
+	io.Copy(ioutil.Discard, resp.Body)
 	resp.Body.Close()
 }
 
 func aggregateStats(r *GameResult, stats chan *Stats) {
+	if r == nil {
+		stats <- &Stats{Figure: "error", Amount: 1}
+		return
+	}
 	if len(r.Winners) == 0 {
-		stats <- &Stats{Figure: "Tie", Weight: 0}
+		stats <- &Stats{Figure: "tie", Amount: 1}
 	} else {
-		stats <- &Stats{Figure: r.WinAction, Weight: len(r.Winners) * len(r.Players)}
+		stats <- &Stats{Figure: r.WinAction, Amount: 1}
 	}
 }
