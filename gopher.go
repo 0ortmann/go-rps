@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-type Bot struct {
+type Gopher struct {
 	Name string
 	Game string
 	Wins int
@@ -23,8 +23,8 @@ type GameStore struct {
 	mu    sync.RWMutex
 }
 
-func NewBot(name string) *Bot {
-	return &Bot{
+func NewGopher(name string) *Gopher {
+	return &Gopher{
 		Name: name,
 	}
 }
@@ -34,10 +34,10 @@ const createURL = "http://localhost:5000/create"
 const evalURL = "http://localhost:5000/eval"
 
 func main() {
-	total := 1000
+	total := 10000
 	fin := make(chan int)
 	for i := 0; i < total; i++ {
-		initBots("game-" + strconv.Itoa(i), fin)
+		initGophers("game-" + strconv.Itoa(i), fin)
 	}
 	var count int
 	for {
@@ -49,14 +49,14 @@ func main() {
 }
 
 // Creates a random number of bots between 1 and 10 and lets them play a game, then close that game
-func initBots(game string, fin chan int) {
+func initGophers(game string, fin chan int) {
 	go func() {
 		rand.Seed(time.Now().UTC().UnixNano())
 		sendCreate(game)
 		bCount := rand.Intn(10) + 1
 		done := make(chan int)
 		for i := 0; i < bCount; i++ {
-			b := NewBot("bot-" + strconv.Itoa(i))
+			b := NewGopher("bot-" + strconv.Itoa(i))
 			b.Play(game, done)
 		}
 		var doneCount int
@@ -71,7 +71,7 @@ func initBots(game string, fin chan int) {
 	}()
 }
 
-func (b *Bot) Play(game string, done chan int) {
+func (b *Gopher) Play(game string, done chan int) {
 	go func() {
 		type Payload struct {
 			Game   string
@@ -94,7 +94,7 @@ func (b *Bot) Play(game string, done chan int) {
 	}()
 }
 
-func (b *Bot) ChooseAction() string {
+func (b *Gopher) ChooseAction() string {
 	rand.Seed(time.Now().UTC().UnixNano())
 	a := [3]string{"rock", "paper", "scissor"}
 	return a[rand.Intn(3)]
