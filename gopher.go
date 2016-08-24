@@ -32,14 +32,14 @@ func NewGopher(name string) *Gopher {
 const playURL = "http://localhost:5000/play"
 const createURL = "http://localhost:5000/create"
 const evalURL = "http://localhost:5000/eval"
+const totalGames = 1000
 
 func main() {
-	total := 1000
 	fin := make(chan int)
-	for i := 0; i < total; i++ {
+	for i := 0; i < totalGames; i++ {
 		go initGophers("game-" + strconv.Itoa(i), fin)
 	}
-	for i := 0; i < total; i++ {
+	for i := 0; i < totalGames; i++ {
 		<-fin
 	}
 }
@@ -61,13 +61,13 @@ func initGophers(game string, fin chan int) {
 	fin <- 1
 }
 
-func (b *Gopher) Play(game string, done chan int) {
+func (g *Gopher) Play(game string, done chan int) {
 	type Payload struct {
 		Game   string
 		Player string
 		Action string
 	}
-	payload := &Payload{game, b.Name, b.ChooseAction()}
+	payload := &Payload{game, g.Name, g.ChooseAction()}
 	jsonStr, _ := json.Marshal(payload)
 
 	resp, err := http.Post(playURL, "application/json", bytes.NewBuffer(jsonStr))
