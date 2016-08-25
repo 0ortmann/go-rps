@@ -39,7 +39,7 @@ func NewGopher(name string) *Gopher {
 const playURL = "http://localhost:5000/play"
 const createURL = "http://localhost:5000/create"
 const evalURL = "http://localhost:5000/eval"
-const totalGames = 5000
+const totalGames = 1000
 
 func main() {
 	stats := make(chan *Stats)
@@ -61,14 +61,14 @@ func main() {
 	}
 }
 
-// Creates a random number of gopher between 1 and 10 and lets them play a game, then close that game
+// Creates a random number of gophers between 2 and 10 and lets them play a game, then close that game
 func startGame(game string, stats chan *Stats) {
 	rand.Seed(time.Now().UTC().UnixNano())
 	sendCreate(game)
-	gCount := rand.Intn(10) + 1
+	gCount := rand.Intn(9) + 2
 	done := make(chan int)
 	for i := 0; i < gCount; i++ {
-		g := NewGopher("gopher-" + strconv.Itoa(i))
+		g := NewGopher(game + "-gopher-" + strconv.Itoa(i))
 		go g.Play(game, done)
 	}
 	for i := 0; i < gCount; i++ {
@@ -93,7 +93,8 @@ func (g *Gopher) Play(game string, done chan int) {
 		done <- 1
 		return
 	}
-	io.Copy(ioutil.Discard, resp.Body)
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println(string(body))
 	resp.Body.Close()
 	done <- 1
 }
